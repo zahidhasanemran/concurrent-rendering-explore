@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import "./App.css";
+import useDebounce from "./hooks/useDebounce";
 
 const items = Array.from(
   { length: 20000 },
@@ -7,19 +8,24 @@ const items = Array.from(
 );
 
 function App() {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState<string>("");
 
-  const handleChange = (e) => {
-    // CRITICAL ERROR: Updating the input AND the heavy list together
+  const debouncedSearch = useDebounce(query, 5000);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
   };
 
-  const filteredItems = items.filter((i) => i.includes(query));
+  const filteredItems = useMemo(
+    () => items.filter((i) => i.includes(debouncedSearch)),
+    [debouncedSearch],
+  );
 
   return (
     <div>
       <input
         type="text"
+        value={query}
         onChange={handleChange}
         placeholder="Type fast to feel the lag..."
       />
